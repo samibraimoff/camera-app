@@ -1,12 +1,15 @@
 import { Link, useFocusEffect } from "expo-router";
 import { View, Pressable, StyleSheet, FlatList, Image } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useCallback, useState } from "react";
+import { Fragment, useCallback, useState } from "react";
 import * as FileSystem from "expo-file-system";
+import { getMediaType, MediaType } from "../utils/media";
+import { Video, ResizeMode } from "expo-av";
 
 type Media = {
   name: string;
   uri: string;
+  type: MediaType;
 };
 
 export default function HomeScreen() {
@@ -27,11 +30,10 @@ export default function HomeScreen() {
       res.map((file) => ({
         name: file,
         uri: FileSystem.documentDirectory + file,
+        type: getMediaType(file),
       }))
     );
   };
-
-  console.log(JSON.stringify(images));
 
   return (
     <View style={styles.container}>
@@ -43,10 +45,30 @@ export default function HomeScreen() {
         renderItem={({ item }) => (
           <Link href={`/${item.name}`} asChild>
             <Pressable style={{ flex: 1, maxWidth: "33.33%" }}>
-              <Image
-                source={{ uri: item.uri }}
-                style={{ aspectRatio: 3 / 4, borderRadius: 5 }}
-              />
+              {item.type === "image" && (
+                <Image
+                  source={{ uri: item.uri }}
+                  style={{ aspectRatio: 3 / 4, borderRadius: 5 }}
+                />
+              )}
+              {item.type === "video" && (
+                <Fragment>
+                  <Video
+                    source={{ uri: item.uri }}
+                    style={{ aspectRatio: 3 / 4, borderRadius: 5 }}
+                    resizeMode={ResizeMode.COVER}
+                    positionMillis={100}
+                    shouldPlay
+                    isLooping
+                  />
+                  <MaterialIcons
+                    name="play-circle-outline"
+                    style={{ position: "absolute" }}
+                    size={30}
+                    color="white"
+                  />
+                </Fragment>
+              )}
             </Pressable>
           </Link>
         )}
